@@ -28,13 +28,13 @@ jobs:
         include-prerelease: true
 
     - name: Restore
-      run: dotnet restore ./backend
+      run: dotnet restore backend/TaskManager.csproj
 
     - name: Build
-      run: dotnet build ./backend --configuration Release --no-restore
+      run: dotnet build backend/TaskManager.csproj --configuration Release --no-restore
 
     - name: Publish
-      run: dotnet publish ./backend -c Release -o ./publish --no-build
+      run: dotnet publish backend/TaskManager.csproj -c Release -o ./publish --no-build
 
     - name: Deploy to Azure
       if: github.event_name == 'push'
