@@ -1,13 +1,45 @@
 name: Deploy Backend
 
 on:
-  workflow_dispatch:
   push:
     branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+  workflow_dispatch:
 
 jobs:
-  test:
+  build-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - run: echo "Workflow triggered successfully!"
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET 10 Preview
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '10.0.x'
+        include-prerelease: true
+
+    - name: Restore
+      run: dotnet restore ./backend
+
+    - name: Build
+      run: dotnet build ./backend --configuration Release --no-restore
+
+    - name: Publish
+      run: dotnet publish ./backend -c Release -o ./publish --no-build
+
+    - name: Deploy to Azure
+      if: github.event_name == 'push'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: task-management-nprod-api
+        publish-profile: ${{ secrets.AZURE_BACKEND_PUBLISH_PROFILE }}
+        package: ./publish
