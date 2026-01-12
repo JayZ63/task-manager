@@ -5,25 +5,44 @@ on:
     branches: [ main ]
     paths:
       - 'frontend/**'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend.yml'
+  workflow_dispatch:
 
 jobs:
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout repo
+      uses: actions/checkout@v3
 
-    - name: Setup Node
+    - name: Setup Node 24
       uses: actions/setup-node@v3
       with:
         node-version: '24'
 
-    - run: npm ci --prefix frontend
-    - run: npm run build --prefix frontend
+    - name: Install dependencies
+      working-directory: frontend
+      run: npm ci
+
+    - name: Build Next.js
+      working-directory: frontend
+      run: npm run build
+
+    - name: Zip build for Azure
+      working-directory: frontend
+      run: |
+        zip -r ../frontend.zip .next public package.json node_modules
 
     - name: Deploy to Azure
+      if: github.event_name == 'push'
       uses: azure/webapps-deploy@v2
       with:
-        app-name: task-manager-frontend
+        app-name: task-management-nprod-ui
         publish-profile: ${{ secrets.AZURE_FRONTEND_PUBLISH_PROFILE }}
-        package: frontend
+        package: frontend.zip
