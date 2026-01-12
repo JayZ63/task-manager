@@ -28,14 +28,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 app.UseStaticFiles();
-// Middleware
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-//app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
 
 // Apply CORS only in Development
 if (app.Environment.IsDevelopment())
