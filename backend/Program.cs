@@ -2,7 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using TaskManager.Data;
 
 var builder = WebApplication.CreateBuilder(args);
-//redeployment trigger
+// Configure the application to listen on the port defined by the PORT environment variable
+//Redploy
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://*:{port}");
 
@@ -34,7 +35,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 // Apply CORS only in Development
 if (app.Environment.IsDevelopment())
