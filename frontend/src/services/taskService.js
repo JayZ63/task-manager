@@ -1,5 +1,6 @@
 import axios from 'axios';
-const API_URL = 'https://localhost:7076/api/task';
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/api/task`;
+
 
 export const getAllTasks = async () => axios.get(API_URL);
 export const addTask = async (task) => axios.post(API_URL, task);
