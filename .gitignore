@@ -1,3 +1,4 @@
+backend/obj
 backend/obj/project.assets.json
 backend/obj/project.nuget.cache
 backend/obj/TaskManager.csproj.nuget.dgspec.json
@@ -5,3 +6,7 @@ backend/obj/Debug/net10.0/TaskManager.AssemblyInfo.cs
 backend/obj/Debug/net10.0/TaskManager.AssemblyInfoInputs.cache
 backend/obj/Debug/net10.0/TaskManager.assets.cache
 backend/obj/Debug/net10.0/TaskManager.GeneratedMSBuildEditorConfig.editorconfig
+backend/obj/Debug/net10.0/TaskManager.AssemblyInfo.cs
+backend/obj/Debug/net10.0/TaskManager.AssemblyInfoInputs.cache
+backend/obj/Debug/net10.0/TaskManager.GeneratedMSBuildEditorConfig.editorconfig
+backend/obj/Debug/net10.0/TaskManager.GlobalUsings.g.cs

@@ -1,16 +1,16 @@
-name: Deploy Backend
+name: Deploy Frontend
 
 on:
   push:
     branches: [ main ]
     paths:
-      - 'backend/**'
-      - '.github/workflows/backend.yml'
+      - 'frontend/**'
+      - '.github/workflows/frontend.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'backend/**'
-      - '.github/workflows/backend.yml'
+      - 'frontend/**'
+      - '.github/workflows/frontend.yml'
   workflow_dispatch:
 
 jobs:
@@ -18,28 +18,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-    - name: Setup .NET 10 Preview
-      uses: actions/setup-dotnet@v3
+    - uses: actions/setup-node@v3
       with:
-        dotnet-version: '10.0.x'
-        include-prerelease: true
+        node-version: '20'
 
-    - name: Restore
-      run: dotnet restore backend/TaskManager.csproj
+    - name: Install deps
+      working-directory: frontend
+      run: npm ci
 
-    - name: Build
-      run: dotnet build backend/TaskManager.csproj --configuration Release --no-restore
+    - name: Build Next.js
+      working-directory: frontend
+      run: npm run build
 
-    - name: Publish
-      run: dotnet publish backend/TaskManager.csproj -c Release -o ./publish --no-build
+    - name: Prepare standalone package
+      run: |
+        mkdir deploy
+        cp -r frontend/.next/standalone/* deploy/
+        cp -r frontend/.next/static deploy/.next/static
+        cp -r frontend/public deploy/public
+        cp frontend/package.json deploy/package.json
 
-    - name: Deploy to Azure
+    - name: Zip
+      run: cd deploy && zip -r ../frontend.zip .
+
+    - name: Deploy
       if: github.event_name == 'push'
       uses: azure/webapps-deploy@v2
       with:
-        app-name: task-management-nprod-api
-        publish-profile: ${{ secrets.AZURE_BACKEND_PUBLISH_PROFILE }}
-        package: ./publish
+        app-name: task-management-nprod-ui
+        publish-profile: ${{ secrets.AZURE_FRONTEND_PUBLISH_PROFILE }}
+        package: frontend.zip
