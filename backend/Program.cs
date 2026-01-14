@@ -17,25 +17,24 @@ builder.Services.AddSwaggerGen();
 // CORS policy for local development
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("LocalDev", policy =>
+    options.AddPolicy("AllowVercel", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        policy.WithOrigins(
+                "http://localhost:3000",
+                "https://task-manager-kappa-gray.vercel.app"
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod();
     });
 });
+
 
 var app = builder.Build();
 app.UseStaticFiles();
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseCors("AllowVercel");
 
-// Apply CORS only in Development
-if (app.Environment.IsDevelopment())
-{
-    app.UseCors("LocalDev");
-}
 
 app.UseAuthorization();
 app.MapControllers();
