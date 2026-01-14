@@ -35,7 +35,7 @@ jobs:
       - name: Prepare standalone package
         run: |
           rm -rf deploy
-          mkdir deploy
+          mkdir -p deploy/.next
           cp -r frontend/.next/standalone/* deploy/
           cp -r frontend/.next/static deploy/.next/static
           cp -r frontend/public deploy/public
