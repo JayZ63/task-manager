@@ -7,12 +7,15 @@ using TaskManager.Data;
 using TaskManager.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-// Configure the application to listen on the port defined by the PORT environment variable
-//Redploy
+
+// Use Azure port
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://*:{port}");
 
-// Add services
+
+// -------------------
+// Database (Azure SQL)
+// -------------------
 builder.Services.AddDbContext<TaskContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
@@ -23,11 +26,51 @@ builder.Services.AddDbContext<TaskContext>(options =>
         )
     ));
 
+
+// -------------------
+// Identity
+// -------------------
+builder.Services
+    .AddIdentityCore<ApplicationUser>(options => { })
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<TaskContext>()
+    .AddDefaultTokenProviders();
+
+
+// -------------------
+// JWT Authentication
+// -------------------
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var key = Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!);
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "taskmanager",
+            ValidAudience = "taskmanager",
+            IssuerSigningKey = new SymmetricSecurityKey(key)
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// -------------------
+// Controllers & OpenAPI
+// -------------------
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi(); // .NET 10 native OpenAPI
 
-// CORS policy for local development
+
+// -------------------
+// CORS (Vercel + Local)
+// -------------------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVercel", policy =>
@@ -41,36 +84,22 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-.AddEntityFrameworkStores<TaskContext>()
-.AddDefaultTokenProviders();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Configuration value 'Jwt:Key' is missing.");
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtKey)
-            )
-        };
-    });
-
-
+// =====================
+// App Pipeline
+// =====================
 var app = builder.Build();
+
+app.MapOpenApi(); // /openapi/v1.json
+
 app.UseStaticFiles();
-app.UseSwagger();
-app.UseSwaggerUI();
+app.UseRouting();
 app.UseCors("AllowVercel");
 
+// 🔴 THIS ORDER IS CRITICAL
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
