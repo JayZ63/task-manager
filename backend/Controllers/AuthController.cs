@@ -58,24 +58,32 @@ namespace TaskManager.Controllers
             var user = await _userManager.FindByEmailAsync(loginModel.Email);
             if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password))
             {
-                var token = GenerateJwtToken(user);
+                var token = await GenerateJwtToken(user);
                 return Ok(new { token });
             }
             return Unauthorized(new { message = "Invalid credentials." });
         }
 
-        private string GenerateJwtToken(ApplicationUser user)
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
             if (user == null || string.IsNullOrEmpty(user.Id) || string.IsNullOrEmpty(user.Email))
             {
                 throw new InvalidOperationException("Invalid user information for token generation.");
             }
 
-            var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Email, user.Email)
-        };
+            var roles = await _userManager.GetRolesAsync(user);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Email, user.Email!)
+            };
+
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
 
             var jwtKey = _config["Jwt:Key"] ?? throw new InvalidOperationException("JWT key is not configured.");
 

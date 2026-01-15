@@ -90,6 +90,11 @@ builder.Services.AddCors(options =>
 // =====================
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    await RoleSeeder.SeedAsync(scope.ServiceProvider);
+}
+
 app.MapOpenApi(); // /openapi/v1.json
 
 app.UseStaticFiles();

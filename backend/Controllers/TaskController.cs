@@ -35,7 +35,7 @@ namespace TaskManager.Controllers
             await _taskContext.SaveChangesAsync();
             return Ok(existing);
         }
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTask(int id)
         {
